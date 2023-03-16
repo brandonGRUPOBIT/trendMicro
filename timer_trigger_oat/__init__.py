@@ -17,9 +17,9 @@ WORKSPACE_ID = configurations.get_workspace_id()
 WORKSPACE_KEY = configurations.get_workspace_key()
 API_TOKENS = configurations.get_api_tokens()
 STORAGE_CONNECTION_STRING = configurations.get_storage_connection_string()
-MAX_OAT_QUERY_MINUTES = configurations.get_max_oat_query_minutes()
+MAX_OAT_QUERY_MINUTES = 2
 DEFAULT_OAT_QUERY_MINUTES = configurations.get_default_oat_query_minutes()
-OAT_QUERY_TIME_BUFFER_MINUTES = configurations.get_oat_query_time_buffer_minutes()
+OAT_QUERY_TIME_BUFFER_MINUTES = 2
 DATETIME_FORMAT = configurations.get_datetime_format()
 LOG_TYPE = configurations.get_oat_health_check_log_type()
 
