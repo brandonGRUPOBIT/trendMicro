@@ -34,7 +34,7 @@ def get_oat_list(
     size: int = 40,
     next_batch_token: str = None,
 ) -> OATDetectionResult:
-    risk_levels = ['low', 'medium', 'high', 'critical']
+    risk_levels = ['medium', 'high', 'critical']
     query_params = {
         'start': int(start_time.timestamp()),
         'end': int(end_time.timestamp()),
