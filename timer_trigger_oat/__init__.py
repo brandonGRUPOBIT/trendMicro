@@ -108,10 +108,22 @@ def main(mytimer: func.TimerRequest, msg: func.Out[typing.List[str]]) -> None:
                     next_batch_token=oat_result.next_batch_token,
                 )
                 messages.extend(build_queue_message(clp_id, oat_result))
-
+            # mod mensajes
+            mensajesRecibidos = len(messages)
+            mensajesInsertados = 0
+            for ms in messages:
+                if "amsi_rawDataStr" in ms:
+                    partialmsg.remove(ms)
+                    break
+                if sys.getsizeof(ms) >= 60000:
+                    partialmsg.remove(ms)
+                    break
+                break
+            mensajesInsertados = len(messages)
             logging.debug(f'oat detections: {oat_result.total_count}')
             logging.info(f'{oat_result.total_count} oat detections events received.')
-
+            logging.info(f'{mensajesRecibidos} Mensajes Recibidos.')
+            logging.info(f'{mensajesInsertados} Mensajes Insertados.')
             msg.set(messages)
 
             update_last_success_time(table_service, clp_id, end_time)
