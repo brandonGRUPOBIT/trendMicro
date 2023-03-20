@@ -114,10 +114,10 @@ def main(mytimer: func.TimerRequest, msg: func.Out[typing.List[str]]) -> None:
             mensajesInsertados = 0
             for ms in messages:
                 if "amsi_rawDataStr" in ms:
-                    partialmsg.remove(ms)
+                    messages.remove(ms)
                     break
                 if sys.getsizeof(ms) >= 60000:
-                    partialmsg.remove(ms)
+                    messages.remove(ms)
                     break
                 break
             mensajesInsertados = len(messages)
