@@ -13,3 +13,6 @@ class OATDetectionResult(BaseModel):
     detections: List[Dict]
     search_api_post_data: List[Dict]
     next_batch_token: Optional[str]
+
+class BlobMessage(BaseModel):
+    blob_name: str
