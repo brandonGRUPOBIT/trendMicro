@@ -1,4 +1,12 @@
-import sys
+#Modified Imports
+import uuid
+from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
+import json
+from typing import Dict, List, Optional
+from pydantic import BaseModel
+#End Modified Imports
+
+
 import logging
 import typing
 
@@ -11,16 +19,18 @@ from requests.exceptions import HTTPError
 
 from shared_code import configurations, utils
 from shared_code.data_collector import LogAnalytics
-from shared_code.models.oat import OATDetectionResult, OATQueueMessage
+from shared_code.models.oat import OATDetectionResult, OATQueueMessage, BlobMessage
 from shared_code.services.oat_service import get_oat_list
+
+
 
 WORKSPACE_ID = configurations.get_workspace_id()
 WORKSPACE_KEY = configurations.get_workspace_key()
 API_TOKENS = configurations.get_api_tokens()
 STORAGE_CONNECTION_STRING = configurations.get_storage_connection_string()
-MAX_OAT_QUERY_MINUTES = 2
+MAX_OAT_QUERY_MINUTES = configurations.get_max_oat_query_minutes()
 DEFAULT_OAT_QUERY_MINUTES = configurations.get_default_oat_query_minutes()
-OAT_QUERY_TIME_BUFFER_MINUTES = 2
+OAT_QUERY_TIME_BUFFER_MINUTES = configurations.get_oat_query_time_buffer_minutes()
 DATETIME_FORMAT = configurations.get_datetime_format()
 LOG_TYPE = configurations.get_oat_health_check_log_type()
 
@@ -72,7 +82,13 @@ def build_queue_message(clp_id: str, oat_result: OATDetectionResult):
         ).json()
         for post_data in oat_result.search_api_post_data
     ]
-
+def save_in_blob(message: list):
+    current_file_name = "message"+str(uuid.uuid4())
+    blob = BlobClient.from_connection_string(conn_str=STORAGE_CONNECTION_STRING, container_name="message-container", blob_name=current_file_name)
+    data = json.dumps(message)
+    blob.upload_blob(data)
+    f = BlobMessage(blob_name= current_file_name)
+    return f.json()
 
 def main(mytimer: func.TimerRequest, msg: func.Out[typing.List[str]]) -> None:
     table_service = TableService(connection_string=STORAGE_CONNECTION_STRING)
@@ -100,7 +116,7 @@ def main(mytimer: func.TimerRequest, msg: func.Out[typing.List[str]]) -> None:
             # get oat list
             oat_result = get_oat_list(token, start_time, end_time)
 
-            messages.extend(build_queue_message(clp_id, oat_result))
+            messages.append(save_in_blob(build_queue_message(clp_id, oat_result)))
             while oat_result.next_batch_token:
                 oat_result = get_oat_list(
                     token,
@@ -108,24 +124,12 @@ def main(mytimer: func.TimerRequest, msg: func.Out[typing.List[str]]) -> None:
                     end_time,
                     next_batch_token=oat_result.next_batch_token,
                 )
-                messages.extend(build_queue_message(clp_id, oat_result))
-            # mod mensajes
-            mensajesRecibidos = len(messages)
-            mensajesInsertados = 0
-            for ms in messages:
-                if "amsi_rawDataStr" in ms:
-                    messages.remove(ms)
-                    break
-                if sys.getsizeof(ms) >= 60000:
-                    messages.remove(ms)
-                    break
-                break
-            mensajesInsertados = len(messages)
+                messages.append(save_in_blob(build_queue_message(clp_id, oat_result)))
+
             logging.debug(f'oat detections: {oat_result.total_count}')
             logging.info(f'{oat_result.total_count} oat detections events received.')
-            logging.info(f'{mensajesRecibidos} Mensajes Recibidos.')
-            logging.info(f'{mensajesInsertados} Mensajes Insertados.')
-            msg.set(messages)
+
+            msg.set(json.dumps(messages))
 
             update_last_success_time(table_service, clp_id, end_time)
 
