@@ -37,9 +37,10 @@ def main(msg: func.QueueMessage) -> None:
     try:
         logging.info(f'Mensaje entro a la función')
         logging.info(f'Mensaje recibido: {msg.get_json()}.')
-        blob_list = json.loads(str(msg.get_json()))
+        blob_list = msg.get_json()
         for blob in blob_list:
             logging.info(f'Blob: {blob}')
+            logging.info(f'Blob: {blob.blob_name}')
         # for peeked_message in queue_messages:
         #     print("Peeked message: " + peeked_message.content)
         #     blob_list = json.loads(peeked_message.content)
