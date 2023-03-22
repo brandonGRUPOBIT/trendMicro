@@ -36,8 +36,8 @@ def _transfrom_logs(clp_id, detections, raw_logs):
 def main(msg: func.QueueMessage) -> None:
     try:
         logging.info(f'Mensaje entro a la función')
-        logging.info(f'Mensaje recibido: {msg.get_json()}.')
-        blob_list = msg.get_json()
+        logging.info(f'Mensaje recibido: {str(msg.get_body())}.')
+        blob_list = json.loads(str(msg.get_body()))
         for blob in blob_list:
             logging.info(f'Blob: {blob}')
             logging.info(f'Blob: {blob.blob_name}')
