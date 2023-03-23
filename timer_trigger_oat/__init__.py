@@ -115,7 +115,20 @@ def main(mytimer: func.TimerRequest, msg: func.Out[typing.List[str]]) -> None:
 
             # get oat list
             oat_result = get_oat_list(token, start_time, end_time)
-
+            if(oat_result.total_count > 2000):
+                end_time = start_time + timedelta(seconds=30)    
+                start_time_str = start_time.strftime(DATETIME_FORMAT)
+                end_time_str = end_time.strftime(DATETIME_FORMAT)
+                health_check_data['queryStartTime'] = start_time_str
+                health_check_data['queryEndTime'] = end_time_str
+                logging.info(
+                    f'Error too much alerts in the previously set interval time, generating new end time... start to poll oat events from {start_time_str} to {end_time_str}.'
+                )
+                update_last_success_time(table_service, clp_id, end_time)
+                logging.info(
+                    f'If this exucution fails you lose the data in the interval {start_time_str} to {end_time_str}.'
+                )
+                oat_result = get_oat_list(token, start_time, end_time)
             messages.append(save_in_blob(build_queue_message(clp_id, oat_result)))
             while oat_result.next_batch_token:
                 oat_result = get_oat_list(
@@ -128,10 +141,10 @@ def main(mytimer: func.TimerRequest, msg: func.Out[typing.List[str]]) -> None:
 
             logging.debug(f'oat detections: {oat_result.total_count}')
             logging.info(f'{oat_result.total_count} oat detections events received.')
-
+            logging.info(f'{messages} Mensajes.')
             msg.set(json.dumps(messages))
 
-            update_last_success_time(table_service, clp_id, end_time)
+            #update_last_success_time(table_service, clp_id, end_time)
 
             health_check_data['newOatCount'] = oat_result.total_count
         except HTTPError as e:
