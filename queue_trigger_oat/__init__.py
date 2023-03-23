@@ -37,10 +37,9 @@ def main(msg: func.QueueMessage) -> None:
     try:
         logging.info(f'Mensaje entro a la función')
         logging.info(f'Mensaje recibido: {str(msg.get_body())}.')
-        byte_string = str(msg.get_body())
-        blob_string = byte_string.decode('utf-8')
-        blob_message = json.loads(blob_string)
-        print(blob_message)
+        
+        blob_string = msg.get_body().decode('utf-8')
+        logging.info(f'Mensaje recibido parsed: {blob_string} .')
         blname = BlobMessage.parse_raw(blob_string) 
         print(blname.blob_name)
         blob = BlobClient.from_connection_string(conn_str=STORAGE_CONNECTION_STRING, container_name="message-container", blob_name=blname.blob_name)
