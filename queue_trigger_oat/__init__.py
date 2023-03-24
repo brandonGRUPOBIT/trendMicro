@@ -67,9 +67,13 @@ def main(msg: func.QueueMessage) -> None:
             transfromed_logs = _transfrom_logs(clp_id, detections, raw_logs)
 
             # send to log analytics
+            logging.info(f'Mensaje antes de enviar a Log Analitycs')
             log_analytics = LogAnalytics(WORKSPACE_ID, WORKSPACE_KEY, OAT_LOG_TYPE)
             log_analytics.post_data(transfromed_logs)
-            print(f'Send oat data successfully. count: {len(transfromed_logs)}.')
+            logging.info(f'WorkSpaceID {WORKSPACE_ID}')
+            logging.info(f'WorkSpaceID {WORKSPACE_KEY}')
+            logging.info(f'Send oat data successfully. count: {len(transfromed_logs)}.')
+            
 
         # for peeked_message in queue_messages:
         #     print("Peeked message: " + peeked_message.content)
